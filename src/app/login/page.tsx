@@ -70,7 +70,7 @@ export default function LoginPage() {
         onClick={onLogin}
         className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
       >
-        Sign Up Here
+        {buttonDesabled ? "Fill all the fields" : "Login"}
       </button>
       <Link href="/signup" className="mt-4 text-blue-500 hover:underline">
         Don't have an account? Sign Up
