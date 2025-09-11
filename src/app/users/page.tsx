@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-// Define the User interface based on your MongoDB schema
 interface User {
   _id: string;
   username: string;
@@ -19,6 +19,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchUsers();
@@ -28,24 +29,45 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log("Fetching users from API...");
       
       const response = await axios.get<{ success: boolean; users: User[]; error?: string }>('/api/users');
-      console.log("API response:", response);
       
       if (response.data.success) {
         setUsers(response.data.users);
-        console.log(`Received ${response.data.users.length} users`);
       } else {
         const errorMsg = response.data.error || 'Failed to fetch users';
-        setError(errorMsg);
-        toast.error(errorMsg);
+        
+        if (response.status === 401) {
+          // Not authenticated, redirect to login
+          toast.error('Please login to view users');
+          router.push('/login');
+          return;
+        } else if (response.status === 403) {
+          // Not authorized (not admin)
+          setError('Admin access required');
+          toast.error('Admin access required');
+        } else {
+          setError(errorMsg);
+          toast.error(errorMsg);
+        }
       }
     } catch (error: any) {
       console.error('Error fetching users:', error);
       const errorMsg = error.response?.data?.error || error.message || 'Failed to fetch users';
-      setError(errorMsg);
-      toast.error(errorMsg);
+      
+      if (error.response?.status === 401) {
+        // Not authenticated, redirect to login
+        toast.error('Please login to view users');
+        router.push('/login');
+        return;
+      } else if (error.response?.status === 403) {
+        // Not authorized (not admin)
+        setError('Admin access required');
+        toast.error('Admin access required');
+      } else {
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -101,34 +123,24 @@ export default function UsersPage() {
 
           {error && (
             <div className="mb-6 p-4 bg-red-900/30 border border-red-700/30 rounded-lg">
-              <h3 className="text-red-400 font-semibold mb-2">Error:</h3>
+              <h3 className="text-red-400 font-semibold mb-2">Access Denied:</h3>
               <p className="text-red-300">{error}</p>
               <p className="text-red-200 text-sm mt-2">
-                Check your browser console for more details.
+                {error.includes('Admin') 
+                  ? 'You need administrator privileges to view this page.' 
+                  : 'Please login with appropriate credentials to access this page.'}
               </p>
             </div>
           )}
 
-          {users.length === 0 ? (
+          {!error && users.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="mt-4 text-xl">No users found in the database.</p>
-              <p className="mt-2">This could be because:</p>
-              <ul className="mt-2 text-sm text-gray-500 list-disc list-inside mx-auto max-w-md">
-                <li>There are no users in the database</li>
-                <li>The database connection is not working</li>
-                <li>There's an authentication requirement</li>
-              </ul>
-              <button
-                onClick={fetchUsers}
-                className="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Try Again
-              </button>
             </div>
-          ) : (
+          ) : !error && (
             <div className="overflow-x-auto rounded-lg border border-gray-700/30">
               <table className="min-w-full divide-y divide-gray-700">
                 <thead className="bg-gray-700/50">
@@ -195,7 +207,7 @@ export default function UsersPage() {
         </div>
 
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Only accessible to authenticated users • Passwords are securely hashed and not displayed</p>
+          <p>Protected admin page • Only accessible to authenticated administrators</p>
         </div>
       </div>
     </div>

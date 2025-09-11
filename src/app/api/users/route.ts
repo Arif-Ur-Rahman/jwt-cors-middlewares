@@ -1,12 +1,23 @@
 import { connect } from "@/dbConfig/dbConfig";
 import User from "@/models/userModel";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 
-// Establish database connection
 connect();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Check if user is authenticated
+    const userId = await getDataFromToken(request);
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required", success: false },
+        { status: 401 }
+      );
+    }
+    
+    // Allow all authenticated users to see the user list
     console.log("Fetching users from database...");
     
     // Fetch all users but exclude the password field
