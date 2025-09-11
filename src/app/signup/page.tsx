@@ -1,94 +1,145 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
 
 export default function SignupPage() {
-    const router = useRouter();
-  const [user, setUser] = React.useState({
+  const router = useRouter();
+  const [user, setUser] = useState({
     email: "",
     password: "",
     username: "",
   });
-  const [buttonDesabled, setButtonDisabled] = React.
-  useState(false);
-  const [loading, setLoading] = React.useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const onSignup = async () => {
+  const onSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-        setLoading(true);
-        const response = await axios.post("/api/users/signup", 
-            user);
-        console.log("Signup success", response.data);
-        toast.success("Signup Successful. Please login now.");   
-        router.push("/login");
-    } catch (error : any) {
-        console.log("Signup error", error.message);
-        
-        toast.error(error.message)
-        
+      setLoading(true);
+      const response = await axios.post("/api/users/signup", user);
+      console.log("Signup success", response.data);
+      toast.success("Signup Successful. Please login now.");
+      router.push("/login");
+    } catch (error: any) {
+      console.log("Signup error", error.message);
+      toast.error(error.message);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user.email.length > 0 
-        && user.password.length > 0 
-        && user.username.length > 0) {
-        setButtonDisabled(false);
-        } else {
-            setButtonDisabled(true);
-        }
-    }, [user]);
+    if (
+      user.email.length > 0 &&
+      user.password.length > 0 &&
+      user.username.length > 0
+    ) {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }, [user]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-black text-red-500">
-      <h1 className="text-green-500">{loading? "Processing" : "Signup" }</h1>
-      <hr />
-      <label htmlFor="username">username</label>
-        <input 
-        type="text" 
-        id="username" 
-        value={user.username}
-        onChange={(e) => setUser({...user, username: e.target.value})}
-        placeholder="username"
-        className="border border-gray-300 p-2 rounded-md w-64 mb-4 text-white"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-700/30">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+              {loading ? "Creating Account..." : "Create Account"}
+            </h1>
+            <p className="mt-2 text-gray-400">Join us and get started</p>
+          </div>
 
-        <label htmlFor="email">email</label>
-        <input 
-        type="text" 
-        id="email" 
-        value={user.email}
-        onChange={(e) => setUser({...user, email: e.target.value})}
-        placeholder="email"
-        className="border border-gray-300 p-2 rounded-md w-64 mb-4 text-white"
-        />
+          <form onSubmit={onSignup} className="space-y-5">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={user.username}
+                onChange={(e) => setUser({ ...user, username: e.target.value })}
+                placeholder="Enter your username"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-500 transition-colors"
+                required
+              />
+            </div>
 
-        <label htmlFor="password">password</label>
-        <input 
-        type="password" 
-        id="password" 
-        value={user.password}
-        onChange={(e) => setUser({...user, password: e.target.value})}
-        placeholder="password"
-        className="border border-gray-300 p-2 rounded-md w-64 mb-4 text-white"
-        />
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={user.email}
+                onChange={(e) => setUser({ ...user, email: e.target.value })}
+                placeholder="Enter your email"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-500 transition-colors"
+                required
+              />
+            </div>
 
-        <button
-        onClick={onSignup}
-        className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-        >
-          { buttonDesabled ? "No Sign Up" : "Sign Up" }
-        </button>
-        <Link href="/login" className="mt-4 text-blue-500 hover:underline">
-          Already have an account? Login
-        </Link>
-        
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={user.password}
+                onChange={(e) => setUser({ ...user, password: e.target.value })}
+                placeholder="Create a password"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-500 transition-colors"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={buttonDisabled || loading}
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                buttonDisabled || loading
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-green-500/20"
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating Account...
+                </div>
+              ) : (
+                "Sign Up"
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
+                Login here
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-700/30">
+            <p className="text-xs text-gray-500 text-center">
+              By creating an account, you agree to our Terms of Service and Privacy Policy.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
